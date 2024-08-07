@@ -42,11 +42,11 @@ impl Accuracy {
 
 // Number of seconds in various time periods
 const S_MINUTE: i64 = 60;
-const S_HOUR: i64 = S_MINUTE * 60;
-const S_DAY: i64 = S_HOUR * 24;
-const S_WEEK: i64 = S_DAY * 7;
-const S_MONTH: i64 = S_DAY * 30;
-const S_YEAR: i64 = S_DAY * 365;
+const S_HOUR: i32 = (S_MINUTE * 60) as i32;
+const S_DAY: i32 = S_HOUR * 24;
+const S_WEEK: i32 = S_DAY * 7;
+const S_MONTH: i32 = S_DAY * 30;
+const S_YEAR: i16 = (S_DAY * 365) as i16;
 
 #[derive(Clone, Copy, Debug)]
 enum TimePeriod {
@@ -56,11 +56,11 @@ enum TimePeriod {
     Millis(i64),
     Seconds(i64),
     Minutes(i64),
-    Hours(i64),
-    Days(i64),
-    Weeks(i64),
-    Months(i64),
-    Years(i64),
+    Hours(i32),
+    Days(i32),
+    Weeks(i32),
+    Months(i32),
+    Years(i16),
     Eternity,
 }
 
@@ -171,15 +171,17 @@ impl HumanTime {
 
     fn rough_period(self) -> Vec<TimePeriod> {
         let period = match self.0.total(jiff::Unit::Second).unwrap().abs() as i64 {
-            n if n > 547 * S_DAY => TimePeriod::Years(max(n / S_YEAR, 2)),
-            n if n > 345 * S_DAY => TimePeriod::Years(1),
-            n if n > 45 * S_DAY => TimePeriod::Months(max(n / S_MONTH, 2)),
-            n if n > 29 * S_DAY => TimePeriod::Months(1),
-            n if n > 10 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(max(n / S_WEEK, 2)),
-            n if n > 6 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(1),
-            n if n > 36 * S_HOUR => TimePeriod::Days(max(n / S_DAY, 2)),
-            n if n > 22 * S_HOUR => TimePeriod::Days(1),
-            n if n > 90 * S_MINUTE => TimePeriod::Hours(max(n / S_HOUR, 2)),
+            n if n as i16 > (547 * S_DAY) as i16 => TimePeriod::Years(max(n as i16 / S_YEAR, 2)),
+            n if n as i16 > (345 * S_DAY) as i16 => TimePeriod::Years(1),
+            n if n as i32 > 45 * S_DAY => TimePeriod::Months(max(n as i32 / S_MONTH, 2)),
+            n if n as i32 > 29 * S_DAY => TimePeriod::Months(1),
+            n if n as i32 > 10 * S_DAY + 12 * S_HOUR => {
+                TimePeriod::Weeks(max(n as i32 / S_WEEK, 2))
+            }
+            n if n as i32 > 6 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(1),
+            n if n as i32 > 36 * S_HOUR => TimePeriod::Days(max(n as i32 / S_DAY, 2)),
+            n if n as i32 > 22 * S_HOUR => TimePeriod::Days(1),
+            n if n > 90 * S_MINUTE => TimePeriod::Hours(max(n as i32 / S_HOUR, 2)),
             n if n > 45 * S_MINUTE => TimePeriod::Hours(1),
             n if n > 90 => TimePeriod::Minutes(max(n / S_MINUTE, 2)),
             n if n > 45 => TimePeriod::Minutes(1),
@@ -196,27 +198,27 @@ impl HumanTime {
 
         let (years, reminder) = self.split_years();
         if let Some(years) = years {
-            periods.push(TimePeriod::Years(years));
+            periods.push(TimePeriod::Years(years as i16));
         }
 
         let (months, reminder) = reminder.split_months();
         if let Some(months) = months {
-            periods.push(TimePeriod::Months(months));
+            periods.push(TimePeriod::Months(months as i32));
         }
 
         let (weeks, reminder) = reminder.split_weeks();
         if let Some(weeks) = weeks {
-            periods.push(TimePeriod::Weeks(weeks));
+            periods.push(TimePeriod::Weeks(weeks as i32));
         }
 
         let (days, reminder) = reminder.split_days();
         if let Some(days) = days {
-            periods.push(TimePeriod::Days(days));
+            periods.push(TimePeriod::Days(days as i32));
         }
 
         let (hours, reminder) = reminder.split_hours();
         if let Some(hours) = hours {
-            periods.push(TimePeriod::Hours(hours));
+            periods.push(TimePeriod::Hours(hours as i32));
         }
 
         let (minutes, reminder) = reminder.split_minutes();
