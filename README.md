@@ -1,0 +1,13 @@
+## Jiff Humanize
+
+## Quick Start
+
+```rust
+use jiff::{Local, Duration};
+use jiff_humanize::HumanTime;
+
+let dt = jiff::Zoned::now() + Duration::days(35);
+let ht = HumanTime::from(dt);
+let english = format!("{}", ht);
+assert_eq!("in a month", english);
+```

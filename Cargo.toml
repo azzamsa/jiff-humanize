@@ -1,0 +1,26 @@
+[package]
+name = "jiff-humanize"
+version = "0.1.0"
+authors = ["Azzam S.A <noreply@azzamsa.com", "Cyril Plisko <cyril.plisko@mountall.com>"]
+categories = ["date-and-time", "value-formatting"]
+documentation = "https://docs.rs/jiff-humanize"
+edition = "2018"
+homepage = "https://github.com/azzamsa/jiff-humanize"
+keywords = ["humanize", "jiff", "time", "date", "arrow"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/azzamsa/jiff-humanize-rs"
+description = "Human-friendly time expressions"
+
+[badges]
+github = { repository = "azzamsa/jiff-humanize" }
+
+[dependencies]
+jiff = "0.1.4"
+
+[package.metadata.release]
+sign-commit = true
+sign-tag = true
+tag-message = "v{{version}}"
+pre-release-commit-message = "v{{version}}"
+pre-release-hook = ["just", "_release-prepare", "{{version}}"]
