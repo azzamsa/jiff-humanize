@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod duration {
     use jiff::ToSpan;
-    use jiff_humanize::HumanTime;
+    use jiffy::HumanTime;
 
     #[test]
     fn now() {
@@ -419,7 +419,7 @@ mod duration {
 
 #[cfg(test)]
 mod utc {
-    use jiff_humanize::HumanTime;
+    use jiffy::HumanTime;
 
     #[test]
     fn now() {
@@ -432,7 +432,7 @@ mod utc {
 #[cfg(test)]
 mod local {
     use jiff::ToSpan;
-    use jiff_humanize::HumanTime;
+    use jiffy::HumanTime;
 
     #[test]
     fn now() {

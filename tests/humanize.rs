@@ -1,9 +1,9 @@
-extern crate jiff_humanize;
+extern crate jiffy;
 
 #[cfg(test)]
 mod duration {
     use jiff::ToSpan;
-    use jiff_humanize::Humanize;
+    use jiffy::Humanize;
 
     #[test]
     fn now() {
@@ -338,7 +338,7 @@ mod duration {
 
 #[cfg(test)]
 mod utc {
-    use jiff_humanize::Humanize;
+    use jiffy::Humanize;
 
     #[test]
     fn now() {
@@ -350,7 +350,7 @@ mod utc {
 #[cfg(test)]
 mod local {
     use jiff::ToSpan;
-    use jiff_humanize::Humanize;
+    use jiffy::Humanize;
 
     #[test]
     fn now() {

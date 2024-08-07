@@ -4,7 +4,7 @@
 
 ```rust
 use jiff::{Local, Duration};
-use jiff_humanize::HumanTime;
+use jiffy::HumanTime;
 
 let dt = jiff::Zoned::now() + Duration::days(35);
 let ht = HumanTime::from(dt);

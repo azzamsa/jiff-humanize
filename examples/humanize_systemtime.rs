@@ -1,7 +1,7 @@
 use std::time::Duration as StdDuration;
 use std::time::SystemTime;
 
-use jiff_humanize::{HumanTime, Humanize};
+use jiffy::{HumanTime, Humanize};
 
 fn humanize_systemtime(src_time: Option<SystemTime>) -> Option<String> {
     src_time.map(|time| time.humanize())

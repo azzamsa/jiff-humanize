@@ -11,7 +11,7 @@
 //!
 //! ```
 //! let dt = jiff::Zoned::now();
-//! let ht = jiff_humanize::HumanTime::from(dt);
+//! let ht = jiffy::HumanTime::from(dt);
 //!
 //! assert_eq!("now", format!("{}", ht));
 //! ```
@@ -19,7 +19,7 @@
 //!
 //! ```
 //! let dt = jiff::Zoned::now().checked_sub(58.minutes()).unwrap()
-//! let ht = jiff_humanize::HumanTime::from(dt);
+//! let ht = jiffy::HumanTime::from(dt);
 //!
 //! assert_eq!("an hour ago", format!("{}", ht));
 //! ```
@@ -28,7 +28,7 @@
 //!
 //! ```
 //! use jiff::ToSpan;;
-//! use jiff_humanize::{Accuracy, HumanTime, Tense};
+//! use jiffy::{Accuracy, HumanTime, Tense};
 //!
 //! # fn main() {
 //! let dt = 45.days();

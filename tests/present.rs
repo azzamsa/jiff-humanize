@@ -14,7 +14,7 @@ macro_rules! duration_test {
 #[cfg(test)]
 mod duration {
     use jiff::ToSpan;
-    use jiff_humanize::{Accuracy, HumanTime, Tense};
+    use jiffy::{Accuracy, HumanTime, Tense};
 
     // test_name: Duration expression, "Rough text", "Precise text"
     duration_test! {
@@ -82,7 +82,7 @@ mod duration {
 
 #[cfg(test)]
 mod utc {
-    use jiff_humanize::{Accuracy, HumanTime, Tense};
+    use jiffy::{Accuracy, HumanTime, Tense};
 
     #[test]
     fn now() {
@@ -95,7 +95,7 @@ mod utc {
 #[cfg(test)]
 mod local {
     use jiff::ToSpan;
-    use jiff_humanize::{Accuracy, HumanTime, Tense};
+    use jiffy::{Accuracy, HumanTime, Tense};
 
     #[test]
     fn now() {
