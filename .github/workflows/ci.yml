@@ -1,0 +1,94 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  code_quality:
+    name: Code Quality
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+
+      - uses: taiki-e/install-action@just
+      - uses: taiki-e/install-action@dprint
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: typos-cli
+
+      - name: Show version information
+        shell: bash
+        run: |
+          just -V
+          dprint --version
+
+      - name: Ensure `fmt` has been run
+        run:  just fmt-check
+
+      - name: Run clippy
+        run: just lint
+
+  msrv:
+    name: Minimum Supported Rust Version
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - uses: taiki-e/install-action@just
+      - uses: taiki-e/install-action@nextest
+
+      - name: Run tests
+        run: just test
+
+  build:
+    name: Build for ${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { build: linux-gnu,  os: ubuntu-22.04, target: x86_64-unknown-linux-gnu    }
+          - { build: linux-musl, os: ubuntu-22.04, target: x86_64-unknown-linux-musl   }
+          - { build: win-gnu,    os: windows-2022, target: x86_64-pc-windows-gnu       }
+          - { build: win-msvc,   os: windows-2022, target: x86_64-pc-windows-msvc      }
+          - { build: win32-msvc, os: windows-2022, target: i686-pc-windows-msvc        }
+          - { build: macos,      os: macos-12    , target: x86_64-apple-darwin         }
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Show version information
+        shell: bash
+        run: |
+          rustc --version
+          cargo --version
+
+      - name: Install musl-tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            --allow-unauthenticated musl-tools
+
+      - name: Use `libfaketime`
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            --allow-unauthenticated musl-tools
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
