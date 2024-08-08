@@ -17,10 +17,10 @@ setup:
     cargo binstall 'cargo-edit cargo-nextest cargo-outdated dprint git-cliff bacon typos-cli'
 
 [doc('Tasks to make the code-base comply with the rules. Mostly used in git hooks')]
-comply: _doc-check fmt lint test
+comply: doc-check fmt lint test
 
 [doc('Check if the repository comply with the rules and ready to be pushed')]
-check: _doc-check fmt-check lint test
+check: doc-check fmt-check lint test
 
 [doc('Develop the app')]
 dev:
@@ -43,7 +43,7 @@ lint:
 
 [doc('Test the codebase')]
 test:
-    cargo nextest run
+    cargo nextest run --all-targets --all-features
 
 [doc('Create a new release. Example `cargo-release release minor --tag-name v0.2.0`')]
 release level:
@@ -55,8 +55,9 @@ release-check level: check
     cargo-release release {{ level }}
 
 [doc('Check the documentation')]
-_doc-check:
+doc-check:
     cargo doc --all-features --no-deps
+    cargo test --doc
 
 [doc('Prepare release hooks')]
 _release-prepare version:
