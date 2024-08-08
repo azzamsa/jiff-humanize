@@ -1,7 +1,7 @@
 [package]
 name = "jiffy"
 version = "0.1.1"
-authors = ["Azzam S.A <noreply@azzamsa.com", "Cyril Plisko <cyril.plisko@mountall.com>"]
+authors = ["Azzam S.A <noreply@azzamsa.com"]
 categories = ["date-and-time", "value-formatting"]
 documentation = "https://docs.rs/jiffy"
 edition = "2018"
