@@ -450,7 +450,8 @@ mod local {
 
     #[test]
     fn now() {
-        let ht = HumanTime::from(jiff::Zoned::now());
+        /// ???
+        let ht = HumanTime::now();
         let english = format!("{:#}", ht);
         assert_eq!("0 seconds", english);
     }

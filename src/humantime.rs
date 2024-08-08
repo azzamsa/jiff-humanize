@@ -41,12 +41,15 @@ impl Accuracy {
 }
 
 // Number of seconds in various time periods
+// Jiff uses `i16` year and `i32` for month, week, day, and hour.
+// The variables here use i64 just to make the intermediate calculation easy.
+// The value will be cast to desired representation at later time
 const S_MINUTE: i64 = 60;
-const S_HOUR: i32 = (S_MINUTE * 60) as i32;
-const S_DAY: i32 = S_HOUR * 24;
-const S_WEEK: i32 = S_DAY * 7;
-const S_MONTH: i32 = S_DAY * 30;
-const S_YEAR: i16 = (S_DAY * 365) as i16;
+const S_HOUR: i64 = S_MINUTE * 60;
+const S_DAY: i64 = S_HOUR * 24;
+const S_WEEK: i64 = S_DAY * 7;
+const S_MONTH: i64 = S_DAY * 30;
+const S_YEAR: i64 = S_DAY * 365;
 
 #[derive(Clone, Copy, Debug)]
 enum TimePeriod {
@@ -160,28 +163,30 @@ impl HumanTime {
         }
     }
 
-    fn tense(self, _accuracy: Accuracy) -> Tense {
-        // (???)
-        match self.0.compare(jiff::Span::default()).unwrap() {
-            Ordering::Greater => Tense::Future,
-            Ordering::Less => Tense::Past,
-            _ => Tense::Present,
+    fn tense(self, accuracy: Accuracy) -> Tense {
+        let zero = jiff::Span::default();
+        if accuracy.is_rough() && self.0.total(jiff::Unit::Second).unwrap().abs() < 11.0 {
+            Tense::Present
+        } else if self.0.compare(zero).unwrap() == Ordering::Greater {
+            Tense::Future
+        } else if self.0.compare(zero).unwrap() == Ordering::Less {
+            Tense::Past
+        } else {
+            Tense::Present
         }
     }
 
     fn rough_period(self) -> Vec<TimePeriod> {
         let period = match self.0.total(jiff::Unit::Second).unwrap().abs() as i64 {
-            n if n as i16 > (547 * S_DAY) as i16 => TimePeriod::Years(max(n as i16 / S_YEAR, 2)),
-            n if n as i16 > (345 * S_DAY) as i16 => TimePeriod::Years(1),
-            n if n as i32 > 45 * S_DAY => TimePeriod::Months(max(n as i32 / S_MONTH, 2)),
-            n if n as i32 > 29 * S_DAY => TimePeriod::Months(1),
-            n if n as i32 > 10 * S_DAY + 12 * S_HOUR => {
-                TimePeriod::Weeks(max(n as i32 / S_WEEK, 2))
-            }
-            n if n as i32 > 6 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(1),
-            n if n as i32 > 36 * S_HOUR => TimePeriod::Days(max(n as i32 / S_DAY, 2)),
-            n if n as i32 > 22 * S_HOUR => TimePeriod::Days(1),
-            n if n > 90 * S_MINUTE => TimePeriod::Hours(max(n as i32 / S_HOUR, 2)),
+            n if n > 547 * S_DAY => TimePeriod::Years(max(n / S_YEAR, 2) as i16),
+            n if n > 345 * S_DAY => TimePeriod::Years(1),
+            n if n > 45 * S_DAY => TimePeriod::Months(max(n / S_MONTH, 2) as i32),
+            n if n > 29 * S_DAY => TimePeriod::Months(1),
+            n if n > 10 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(max(n / S_WEEK, 2) as i32),
+            n if n > 6 * S_DAY + 12 * S_HOUR => TimePeriod::Weeks(1),
+            n if n > 36 * S_HOUR => TimePeriod::Days(max(n / S_DAY, 2) as i32),
+            n if n > 22 * S_HOUR => TimePeriod::Days(1),
+            n if n > 90 * S_MINUTE => TimePeriod::Hours(max(n / S_HOUR, 2) as i32),
             n if n > 45 * S_MINUTE => TimePeriod::Hours(1),
             n if n > 90 => TimePeriod::Minutes(max(n / S_MINUTE, 2)),
             n if n > 45 => TimePeriod::Minutes(1),
@@ -381,7 +386,7 @@ impl From<SystemTime> for HumanTime {
 
 impl From<jiff::Timestamp> for HumanTime {
     fn from(dt: jiff::Timestamp) -> Self {
-        dt.since(jiff::Zoned::now()).unwrap().into()
+        dt.since(jiff::Timestamp::now()).unwrap().into()
     }
 }
 
