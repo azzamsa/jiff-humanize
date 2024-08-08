@@ -138,11 +138,11 @@ impl HumanTime {
     }
 
     /// Gives English text representation of the `HumanTime` with given `accuracy` and 'tense`
-    #[must_use]
-    pub fn to_text_en(self, accuracy: Accuracy, tense: Tense) -> String {
+    #[must_use = ""]
+    pub fn to_text_en(self, accuracy: Accuracy, tense: Tense) -> Result<String, crate::Error> {
         let mut periods = match accuracy {
-            Accuracy::Rough => self.rough_period(),
-            Accuracy::Precise => self.precise_period(),
+            Accuracy::Rough => self.rough_period()?,
+            Accuracy::Precise => self.precise_period()?,
         };
 
         let first = periods.remove(0).to_text(accuracy);
@@ -157,27 +157,28 @@ impl HumanTime {
         }
 
         match tense {
-            Tense::Past => format!("{} ago", text),
-            Tense::Future => format!("in {}", text),
-            Tense::Present => text.into_owned(),
+            Tense::Past => Ok(format!("{} ago", text)),
+            Tense::Future => Ok(format!("in {}", text)),
+            Tense::Present => Ok(text.into_owned()),
         }
     }
 
-    fn tense(self, accuracy: Accuracy) -> Tense {
+    fn tense(self, accuracy: Accuracy) -> Result<Tense, crate::Error> {
         let zero = jiff::Span::default();
-        if accuracy.is_rough() && self.0.total(jiff::Unit::Second).unwrap().abs() < 11.0 {
+        let tense = if accuracy.is_rough() && self.0.total(jiff::Unit::Second)?.abs() < 11.0 {
             Tense::Present
-        } else if self.0.compare(zero).unwrap() == Ordering::Greater {
+        } else if self.0.compare(zero)? == Ordering::Greater {
             Tense::Future
-        } else if self.0.compare(zero).unwrap() == Ordering::Less {
+        } else if self.0.compare(zero)? == Ordering::Less {
             Tense::Past
         } else {
             Tense::Present
-        }
+        };
+        Ok(tense)
     }
 
-    fn rough_period(self) -> Vec<TimePeriod> {
-        let period = match self.0.total(jiff::Unit::Second).unwrap().abs() as i64 {
+    fn rough_period(self) -> Result<Vec<TimePeriod>, crate::Error> {
+        let period = match self.0.total(jiff::Unit::Second)?.abs() as i64 {
             n if n > 547 * S_DAY => TimePeriod::Years(max(n / S_YEAR, 2) as i16),
             n if n > 345 * S_DAY => TimePeriod::Years(1),
             n if n > 45 * S_DAY => TimePeriod::Months(max(n / S_MONTH, 2) as i32),
@@ -195,58 +196,58 @@ impl HumanTime {
             _ => TimePeriod::Eternity,
         };
 
-        vec![period]
+        Ok(vec![period])
     }
 
-    fn precise_period(self) -> Vec<TimePeriod> {
+    fn precise_period(self) -> Result<Vec<TimePeriod>, crate::Error> {
         let mut periods = vec![];
 
-        let (years, reminder) = self.split_years();
+        let (years, reminder) = self.split_years()?;
         if let Some(years) = years {
             periods.push(TimePeriod::Years(years as i16));
         }
 
-        let (months, reminder) = reminder.split_months();
+        let (months, reminder) = reminder.split_months()?;
         if let Some(months) = months {
             periods.push(TimePeriod::Months(months as i32));
         }
 
-        let (weeks, reminder) = reminder.split_weeks();
+        let (weeks, reminder) = reminder.split_weeks()?;
         if let Some(weeks) = weeks {
             periods.push(TimePeriod::Weeks(weeks as i32));
         }
 
-        let (days, reminder) = reminder.split_days();
+        let (days, reminder) = reminder.split_days()?;
         if let Some(days) = days {
             periods.push(TimePeriod::Days(days as i32));
         }
 
-        let (hours, reminder) = reminder.split_hours();
+        let (hours, reminder) = reminder.split_hours()?;
         if let Some(hours) = hours {
             periods.push(TimePeriod::Hours(hours as i32));
         }
 
-        let (minutes, reminder) = reminder.split_minutes();
+        let (minutes, reminder) = reminder.split_minutes()?;
         if let Some(minutes) = minutes {
             periods.push(TimePeriod::Minutes(minutes));
         }
 
-        let (seconds, reminder) = reminder.split_seconds();
+        let (seconds, reminder) = reminder.split_seconds()?;
         if let Some(seconds) = seconds {
             periods.push(TimePeriod::Seconds(seconds));
         }
 
-        let (millis, reminder) = reminder.split_milliseconds();
+        let (millis, reminder) = reminder.split_milliseconds()?;
         if let Some(millis) = millis {
             periods.push(TimePeriod::Millis(millis));
         }
 
-        let (micros, reminder) = reminder.split_microseconds();
+        let (micros, reminder) = reminder.split_microseconds()?;
         if let Some(micros) = micros {
             periods.push(TimePeriod::Micros(micros));
         }
 
-        let (nanos, reminder) = reminder.split_nanoseconds();
+        let (nanos, reminder) = reminder.split_nanoseconds()?;
         if let Some(nanos) = nanos {
             periods.push(TimePeriod::Nanos(nanos));
         }
@@ -257,83 +258,77 @@ impl HumanTime {
             periods.push(TimePeriod::Seconds(0));
         }
 
-        periods
+        Ok(periods)
     }
 
     /// Split this `HumanTime` into number of whole years and the reminder
-    fn split_years(self) -> (Option<i64>, Self) {
+    fn split_years(self) -> Result<(Option<i64>, Self), crate::Error> {
         let years = self.0.get_days() / Self::DAYS_IN_YEAR;
-        let reminder = self
-            .0
-            .checked_sub((years * Self::DAYS_IN_YEAR).days())
-            .unwrap();
-        Self::normalize_split(years as i64, reminder)
+        let reminder = self.0.checked_sub((years * Self::DAYS_IN_YEAR).days())?;
+        Ok(Self::normalize_split(years as i64, reminder))
     }
 
     /// Split this `HumanTime` into number of whole months and the reminder
-    fn split_months(self) -> (Option<i64>, Self) {
+    fn split_months(self) -> Result<(Option<i64>, Self), crate::Error> {
         let months = self.0.get_days() / Self::DAYS_IN_MONTH;
-        let reminder = self
-            .0
-            .checked_sub((months * Self::DAYS_IN_MONTH).days())
-            .unwrap();
-        Self::normalize_split(months as i64, reminder)
+        let reminder = self.0.checked_sub((months * Self::DAYS_IN_MONTH).days())?;
+        Ok(Self::normalize_split(months as i64, reminder))
     }
 
     /// Split this `HumanTime` into number of whole weeks and the reminder
-    fn split_weeks(self) -> (Option<i64>, Self) {
+    fn split_weeks(self) -> Result<(Option<i64>, Self), crate::Error> {
         let weeks = self.0.get_weeks();
-        let reminder = self.0.checked_sub(weeks.weeks()).unwrap();
-        Self::normalize_split(weeks as i64, reminder)
+        let reminder = self.0.checked_sub(weeks.weeks())?;
+        Ok(Self::normalize_split(weeks as i64, reminder))
     }
 
     /// Split this `HumanTime` into number of whole days and the reminder
-    fn split_days(self) -> (Option<i64>, Self) {
+    fn split_days(self) -> Result<(Option<i64>, Self), crate::Error> {
         let days = self.0.get_days();
-        let reminder = self.0.checked_sub(days.days()).unwrap();
-        Self::normalize_split(days as i64, reminder)
+        let reminder = self.0.checked_sub(days.days())?;
+        Ok(Self::normalize_split(days as i64, reminder))
     }
 
     /// Split this `HumanTime` into number of whole hours and the reminder
-    fn split_hours(self) -> (Option<i64>, Self) {
+    fn split_hours(self) -> Result<(Option<i64>, Self), crate::Error> {
         let hours = self.0.get_hours();
-        let reminder = self.0.checked_sub(hours.hours()).unwrap();
-        Self::normalize_split(hours as i64, reminder)
+        let reminder = self.0.checked_sub(hours.hours())?;
+        Ok(Self::normalize_split(hours as i64, reminder))
     }
 
     /// Split this `HumanTime` into number of whole minutes and the reminder
-    fn split_minutes(self) -> (Option<i64>, Self) {
+    fn split_minutes(self) -> Result<(Option<i64>, Self), crate::Error> {
         let minutes = self.0.get_minutes();
-        let reminder = self.0.checked_sub(minutes.minutes()).unwrap();
-        Self::normalize_split(minutes, reminder)
+        let reminder = self.0.checked_sub(minutes.minutes())?;
+        Ok(Self::normalize_split(minutes, reminder))
     }
 
     /// Split this `HumanTime` into number of whole seconds and the reminder
-    fn split_seconds(self) -> (Option<i64>, Self) {
+    fn split_seconds(self) -> Result<(Option<i64>, Self), crate::Error> {
         let seconds = self.0.get_seconds();
-        let reminder = self.0.checked_sub(seconds.seconds()).unwrap();
-        Self::normalize_split(seconds, reminder)
+        let reminder = self.0.checked_sub(seconds.seconds())?;
+        Ok(Self::normalize_split(seconds, reminder))
     }
 
     /// Split this `HumanTime` into number of whole milliseconds and the reminder
-    fn split_milliseconds(self) -> (Option<i64>, Self) {
+    fn split_milliseconds(self) -> Result<(Option<i64>, Self), crate::Error> {
         let millis = self.0.get_milliseconds();
-        let reminder = self.0.checked_sub(millis.milliseconds()).unwrap();
-        Self::normalize_split(millis, reminder)
+        let reminder = self.0.checked_sub(millis.milliseconds())?;
+        Ok(Self::normalize_split(millis, reminder))
     }
 
     /// Split this `HumanTime` into number of whole seconds and the reminder
-    fn split_microseconds(self) -> (Option<i64>, Self) {
+    fn split_microseconds(self) -> Result<(Option<i64>, Self), crate::Error> {
         let micros = self.0.get_microseconds();
-        let reminder = self.0.checked_sub(micros.microseconds()).unwrap();
-        Self::normalize_split(micros, reminder)
+        let reminder = self.0.checked_sub(micros.microseconds())?;
+        Ok(Self::normalize_split(micros, reminder))
     }
 
     /// Split this `HumanTime` into number of whole seconds and the reminder
-    fn split_nanoseconds(self) -> (Option<i64>, Self) {
+    fn split_nanoseconds(self) -> Result<(Option<i64>, Self), crate::Error> {
         let nanos = self.0.get_nanoseconds();
-        let reminder = self.0.checked_sub(nanos.nanoseconds()).unwrap();
-        Self::normalize_split(nanos, reminder)
+        let reminder = self.0.checked_sub(nanos.nanoseconds())?;
+        Ok(Self::normalize_split(nanos, reminder))
     }
 
     fn normalize_split(
@@ -348,8 +343,8 @@ impl HumanTime {
         self.0.is_zero()
     }
 
-    fn locale_en(&self, accuracy: Accuracy) -> String {
-        let tense = self.tense(accuracy);
+    fn locale_en(&self, accuracy: Accuracy) -> Result<String, crate::Error> {
+        let tense = self.tense(accuracy)?;
         self.to_text_en(accuracy, tense)
     }
 }
@@ -362,7 +357,7 @@ impl fmt::Display for HumanTime {
             Accuracy::Rough
         };
 
-        f.pad(&self.locale_en(accuracy))
+        f.pad(&self.locale_en(accuracy).unwrap())
     }
 }
 

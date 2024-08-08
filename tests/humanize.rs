@@ -168,15 +168,17 @@ mod duration {
     }
 
     #[test]
-    fn plus_6d_13h() {
-        let english = 6.days().checked_add(13.hours()).unwrap().humanize();
+    fn plus_6d_13h() -> anyhow::Result<()> {
+        let english = 6.days().checked_add(13.hours())?.humanize();
         assert_eq!("in a week", english);
+        Ok(())
     }
 
     #[test]
-    fn minus_6d_13h() {
-        let english = (-6).days().checked_add((-13).hours()).unwrap().humanize();
+    fn minus_6d_13h() -> anyhow::Result<()> {
+        let english = (-6).days().checked_add((-13).hours())?.humanize();
         assert_eq!("a week ago", english);
+        Ok(())
     }
 
     #[test]
@@ -359,16 +361,18 @@ mod local {
     }
 
     #[test]
-    fn minus_35d() {
-        let past = jiff::Zoned::now().checked_sub(35.days()).unwrap();
+    fn minus_35d() -> anyhow::Result<()> {
+        let past = jiff::Zoned::now().checked_sub(35.days())?;
         let english = past.humanize();
         assert_eq!("a month ago", english);
+        Ok(())
     }
 
     #[test]
-    fn plus_35d() {
-        let future = jiff::Zoned::now().checked_add(35.days()).unwrap();
+    fn plus_35d() -> anyhow::Result<()> {
+        let future = jiff::Zoned::now().checked_add(35.days())?;
         let english = future.humanize();
         assert_eq!("in a month", english);
+        Ok(())
     }
 }

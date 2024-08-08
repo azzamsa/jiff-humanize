@@ -51,7 +51,10 @@
 
 pub use crate::humantime::{Accuracy, HumanTime, Tense};
 
+mod error;
 mod humantime;
+
+pub use error::Error;
 
 /// Present the object in human friendly text form
 pub trait Humanize {

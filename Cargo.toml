@@ -17,6 +17,10 @@ github = { repository = "azzamsa/jiffy" }
 
 [dependencies]
 jiff = "0.1.4"
+thiserror = "1.0.63"
+
+[dev-dependencies]
+anyhow = "1.0.86"
 
 [package.metadata.release]
 sign-commit = true

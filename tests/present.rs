@@ -1,12 +1,13 @@
-macro_rules! duration_test {
+macro_rules! duration_test  {
     ($($name:ident: $duration:expr, $rough:expr, $precise:expr,)+) => {
         $(#[test]
-        fn $name() {
+        fn $name() -> anyhow::Result<()> {
             let ht = HumanTime::from($duration);
-            let rough = ht.to_text_en(Accuracy::Rough, Tense::Present);
-            let precise = ht.to_text_en(Accuracy::Precise, Tense::Present);
+            let rough = ht.to_text_en(Accuracy::Rough, Tense::Present)?;
+            let precise = ht.to_text_en(Accuracy::Precise, Tense::Present)?;
             assert_eq!($rough, rough);
             assert_eq!($precise, precise);
+            Ok(())
         })+
     }
 }
@@ -47,8 +48,8 @@ mod duration {
         minus_1d: (-1).days(), "a day", "1 day",
         plus_2d: 2.days(), "2 days", "2 days",
         minus_2d: (-2).days(), "2 days", "2 days",
-        plus_6d_13h: 6.days().checked_add(13.hours()).unwrap(), "a week", "6 days and 13 hours",
-        minus_6d_13h: (-6).days().checked_add((-13).hours()).unwrap(), "a week", "6 days and 13 hours",
+        plus_6d_13h: 6.days().checked_add(13.hours())?, "a week", "6 days and 13 hours",
+        minus_6d_13h: (-6).days().checked_add((-13).hours())?, "a week", "6 days and 13 hours",
         plus_7d: 7.days(), "a week", "1 week",
         minus_7d: (-7).days(), "a week", "1 week",
         plus_10d: 10.days(), "a week", "1 week and 3 days",
@@ -85,10 +86,11 @@ mod utc {
     use jiffy::{Accuracy, HumanTime, Tense};
 
     #[test]
-    fn now() {
+    fn now() -> anyhow::Result<()> {
         let ht = HumanTime::from(jiff::Zoned::now());
-        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present);
+        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present)?;
         assert_eq!("now", rough);
+        Ok(())
     }
 }
 
@@ -98,25 +100,28 @@ mod local {
     use jiffy::{Accuracy, HumanTime, Tense};
 
     #[test]
-    fn now() {
+    fn now() -> anyhow::Result<()> {
         let ht = HumanTime::from(jiff::Zoned::now());
-        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present);
+        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present)?;
         assert_eq!("now", rough);
+        Ok(())
     }
 
     #[test]
-    fn minus_35d() {
-        let past = jiff::Zoned::now().checked_sub(35.days()).unwrap();
+    fn minus_35d() -> anyhow::Result<()> {
+        let past = jiff::Zoned::now().checked_sub(35.days())?;
         let ht = HumanTime::from(past);
-        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present);
+        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present)?;
         assert_eq!("a month", rough);
+        Ok(())
     }
 
     #[test]
-    fn plus_35d() {
-        let future = jiff::Zoned::now().checked_add(35.days()).unwrap();
+    fn plus_35d() -> anyhow::Result<()> {
+        let future = jiff::Zoned::now().checked_add(35.days())?;
         let ht = HumanTime::from(future);
-        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present);
+        let rough = ht.to_text_en(Accuracy::Rough, Tense::Present)?;
         assert_eq!("a month", rough);
+        Ok(())
     }
 }

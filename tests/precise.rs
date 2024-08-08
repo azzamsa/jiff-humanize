@@ -235,17 +235,19 @@ mod duration {
     }
 
     #[test]
-    fn plus_6d_13h() {
-        let ht = HumanTime::from(6.days().checked_add(13.hours()).unwrap());
+    fn plus_6d_13h() -> anyhow::Result<()> {
+        let ht = HumanTime::from(6.days().checked_add(13.hours())?);
         let english = format!("{:#}", ht);
         assert_eq!("in 6 days and 13 hours", english);
+        Ok(())
     }
 
     #[test]
-    fn minus_6d_13h() {
-        let ht = HumanTime::from((-6).days().checked_add((-13).hours()).unwrap());
+    fn minus_6d_13h() -> anyhow::Result<()> {
+        let ht = HumanTime::from((-6).days().checked_add((-13).hours())?);
         let english = format!("{:#}", ht);
         assert_eq!("6 days and 13 hours ago", english);
+        Ok(())
     }
 
     #[test]
@@ -450,25 +452,26 @@ mod local {
 
     #[test]
     fn now() {
-        /// ???
         let ht = HumanTime::now();
         let english = format!("{:#}", ht);
         assert_eq!("0 seconds", english);
     }
 
     #[test]
-    fn minus_35d() {
-        let past = jiff::Zoned::now().checked_sub(35.days()).unwrap();
+    fn minus_35d() -> anyhow::Result<()> {
+        let past = jiff::Zoned::now().checked_sub(35.days())?;
         let ht = HumanTime::from(past);
         let english = format!("{:#}", ht);
         assert_eq!("1 month ago", english);
+        Ok(())
     }
 
     #[test]
-    fn plus_35d() {
-        let future = jiff::Zoned::now().checked_add(35.days()).unwrap();
+    fn plus_35d() -> anyhow::Result<()> {
+        let future = jiff::Zoned::now().checked_add(35.days())?;
         let ht = HumanTime::from(future);
         let english = format!("{:#}", ht);
         assert_eq!("in 1 month", english);
+        Ok(())
     }
 }
